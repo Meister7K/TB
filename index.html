@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matchup Page</title>
+    <style>
+        #matchupContainer {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+            gap:1em;
+        }
+        .team {
+            width: 48%;
+            padding: 10px;
+            border: 2px solid #000;
+            border-radius: 8px;
+            box-sizing: border-box;
+           
+        }
+        @media (max-width:768px){
+            .team{width:100%;
+            }
+        }
+        .team h2 {
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .player {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px;
+            border-bottom: 1px solid #ddd;
+        }
+        .player:last-child {
+            border-bottom: none;
+        }
+        .points {
+            font-weight: bold;
+        }
+        .total-points {
+            
+            width: 100%;
+            display:block;
+            margin-top: 20px;
+            font-size: 1.5em;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>2024 Toilet Bowl</h1>
+    <div id="matchupContainer">
+        <!-- Matchup data will be inserted here -->
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>
