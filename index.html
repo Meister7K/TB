@@ -5,58 +5,107 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Matchup Page</title>
     <style>
-        #matchupContainer {
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            box-sizing: border-box;
-            gap:1em;
+        :root {
+            --bg-primary: #ffffff;
+            --text-primary: #000000;
+            --border-color: #e2e8f0;
+            --card-bg: #ffffff70;
+            --highlight-win: rgba(0, 255, 190, 0.3);
+            --highlight-loss: rgba(255, 0, 10, 0.3);
         }
-        .team {
-            width: 48%;
-            padding: 10px;
-            border: 2px solid #000;
-            border-radius: 8px;
-            box-sizing: border-box;
-           
-        }
-        @media (max-width:768px){
-            .team{width:100%;
+
+        @media (prefers-color-scheme: dark) {
+            :root {
+                --bg-primary: #1a202c;
+                --text-primary: #ffffff;
+                --border-color: #2d3748;
+                --card-bg: #2d374870;
+                --highlight-win: rgba(0, 255, 190, 0.2);
+                --highlight-loss: rgba(255, 0, 10, 0.2);
             }
         }
-        .team h2 {
-            text-align: center;
-            margin-bottom: 10px;
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            transition: background-color 0.3s ease, color 0.3s ease;
+            margin: 0;
+            padding: 1rem;
+            font-family: system-ui, -apple-system, sans-serif;
         }
+
+        #matchupContainer {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1rem;
+            margin-bottom: 5em;
+        }
+
+        .team {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 1rem;
+            padding: 1.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
         .player {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px;
-            border-bottom: 1px solid #ddd;
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
         }
-        .player:last-child {
-            border-bottom: none;
-        }
-        .points {
-            font-weight: bold;
-        }
+
         .total-points {
-            
-            width: 100%;
-            display:block;
-            margin-top: 20px;
-            font-size: 1.5em;
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 1.5rem;
+            width:100%;
+            position: fixed;
+            bottom:1em;
+            left:0;
+            /* margin-inline:1em; */
+            box-sizing: border-box;
+            font-weight: bold;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .timer {
+            background-color: var(--card-bg);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .timer-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-top: 0.5rem;
+        }
+        h1{
             text-align: center;
         }
     </style>
 </head>
 <body>
+    <div class="timer">
+        <div id="countdown"></div>
+    </div>
     <h1>2024 Toilet Bowl</h1>
     <div id="matchupContainer">
         <!-- Matchup data will be inserted here -->
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0"></script>
     <script src="index.js"></script>
 </body>
 </html>

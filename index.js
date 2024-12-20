@@ -14,6 +14,37 @@ async function loadPlayersData() {
     }
 }
 
+function updateCountdown() {
+    const deadline = new Date('2024-12-23T23:00:00-07:00');
+    const now = new Date();
+    const difference = deadline - now;
+
+    if (difference <= 0) {
+        document.getElementById('countdown').innerHTML = '<div class="timer-value">Ball Game!</div>';
+        return;
+    }
+
+    const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+    const minutes = Math.floor((difference / 1000 / 60) % 60);
+    const seconds = Math.floor((difference / 1000) % 60);
+
+    document.getElementById('countdown').innerHTML = `
+        <div>Time Remaining</div>
+        <div class="timer-value">
+            ${days}d ${hours}h ${minutes}m ${seconds}s
+        </div>
+    `;
+}
+
+function triggerConfetti() {
+    confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 }
+    });
+}
+
 // Sleeper API URL for matchups
 const leagueId = '1124846398970298368';
 const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`;  // Adjust matchup ID if needed
@@ -43,7 +74,10 @@ document.addEventListener('DOMContentLoaded', () => {
     loadPlayersData().then(() => {
         // Load matchups after players data is loaded
         loadMatchupData();
+        triggerConfetti();
 
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
         // Reload every 30 seconds
         setInterval(loadMatchupData, 30000);
     });
@@ -111,7 +145,7 @@ function renderTeam(teamData, teamName) {
     const teamDiv = document.createElement('div');
     teamDiv.classList.add(`team`);
     teamDiv.classList.add(`${teamName}-color`);
-    teamDiv.innerHTML = `<h2>${teamName} Team</h2>`;
+    teamDiv.innerHTML = `<h2>${teamName}</h2>`;
 
     const starters = teamData.starters || [];
     const starterPoints = teamData.starters_points || [];
@@ -124,7 +158,8 @@ function renderTeam(teamData, teamName) {
             return {
                 name: player.full_name,
                 team: player.team,
-                position: player.position
+                position: player.position,
+                id:player.player_id
             };
         }
         return null;
@@ -139,7 +174,7 @@ function renderTeam(teamData, teamName) {
     playerInfo.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player');
-        playerDiv.innerHTML = `
+        playerDiv.innerHTML = `<img style="object-fit:cover;height:50px;width:50px;border-radius:50%;" src="https://sleepercdn.com/content/nfl/players/${player.id}.jpg">
             <span>${player.name} - (${player.team})</span>
             <span>${player.position}</span>
             <span class="points">${starterPoints[index]}</span>
