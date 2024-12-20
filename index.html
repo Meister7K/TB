@@ -94,6 +94,48 @@
         h1{
             text-align: center;
         }
+        .player {
+            display: grid;
+            grid-template-columns: auto 1fr auto auto;
+            gap: 1rem;
+            align-items: center;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border-color);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            margin-top:1em;
+            height: 50%;
+            grid-column: 1 / -1;  /* Span all columns */
+            transform-origin: left;
+            transform: scaleX(0);
+            transition: transform 0.3s ease, background-color 0.3s ease;
+            z-index: 0;
+            opacity: 0.2;
+            border-radius: 10px;
+        }
+
+        .player > *:not(.progress-bar) {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Add this to ensure the grid items are positioned correctly */
+        .player img,
+        .player span {
+            grid-row: 1;
+        }
+
+        .player img { grid-column: 1; }
+        .player span:nth-of-type(1) { grid-column: 2; }
+        .player span:nth-of-type(2) { grid-column: 3; }
+        .player span:nth-of-type(3) { grid-column: 4; }
     </style>
 </head>
 <body>

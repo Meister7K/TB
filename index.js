@@ -1,16 +1,16 @@
-let playersData = {};  // Store player data
+let playersData = {};  
 
-// Load players data from the JSON file
+
 async function loadPlayersData() {
     try {
-        const response = await fetch('players.json');  // Adjust the path if needed
+        const response = await fetch('players.json'); 
         if (!response.ok) {
             throw new Error('Failed to load players data');
         }
         playersData = await response.json();
     } catch (error) {
         console.error("Error loading players data:", error);
-        showErrorModal();  // Show the error modal
+        showErrorModal();  
     }
 }
 
@@ -45,9 +45,9 @@ function triggerConfetti() {
     });
 }
 
-// Sleeper API URL for matchups
+
 const leagueId = '1124846398970298368';
-const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`;  // Adjust matchup ID if needed
+const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`; 
 
 // const leagueId= 1124846398970298368
 
@@ -63,47 +63,47 @@ const usersURL = `https://api.sleeper.app/v1/league/${leagueId}/users`
 
 const diff = 9.44
 
-const karl = "873581177716563968" //1
-const matt = "992120789191192576" //3
-// Team identifiers (for Karl and Matt)
+const karl = "873581177716563968" 
+const matt = "992120789191192576" 
+
 const karlRosterId = 2;
 const mattRosterId = 4;
 
-// Load matchups data when the page is loaded
+
 document.addEventListener('DOMContentLoaded', () => {
     loadPlayersData().then(() => {
-        // Load matchups after players data is loaded
+        
         loadMatchupData();
         triggerConfetti();
 
         updateCountdown();
         setInterval(updateCountdown, 1000);
-        // Reload every 30 seconds
+       
         setInterval(loadMatchupData, 30000);
     });
 });
 
-// Load and process matchup data
+
 async function loadMatchupData() {
     try {
-        // Fetching matchup data from the Sleeper API
+      
         const response = await fetch(matchupsURL);
         const data = await response.json();
 
-        // Find the team data for Karl and Matt using their roster IDs
+     
         const karlTeamData = data.find(item => item.roster_id === karlRosterId);
         const mattTeamData = data.find(item => item.roster_id === mattRosterId);
 console.log(karlTeamData)
-        // Ensure both teams are found
+     
         if (!karlTeamData || !mattTeamData) {
             throw new Error("Failed to find both teams");
         }
 
-        // Populate the matchup container with team data
+        
         const matchupContainer = document.getElementById('matchupContainer');
-        matchupContainer.innerHTML = '';  // Clear previous matchup data
+        matchupContainer.innerHTML = ''; 
 
-        // Render Karl and Matt's teams
+   
         const karlTotalPoints = renderTeam(karlTeamData, 'Karl');
         const mattTotalPoints = renderTeam(mattTeamData, 'Matt');
 
@@ -123,7 +123,7 @@ console.log(karlTeamData)
                 document.querySelector('.Matt-color').style.cssText = ' background-color: unset;';
                 document.querySelector('.Karl-color').style.cssText = ' background-color: unset;';
             }
-        // Add total points at the bottom of the matchup
+      
         const totalPointsDiv = document.createElement('div');
         totalPointsDiv.classList.add('total-points');
         totalPointsDiv.textContent = `Karl : ${karlPoints} / ${mattTeamData.points}: Matt `;
@@ -136,11 +136,29 @@ console.log(karlTeamData)
 
     } catch (error) {
         console.error("Error fetching team data:", error);
-        showErrorModal();  // Show the error modal
+        showErrorModal();  
+    }
+}
+function getProgressColor(points) {
+   
+    const percentage = points * 5; 
+    
+    if (percentage <= 25) {
+        return '#ff0000'; 
+    } else if (percentage <= 50) {
+        return '#ffff00'; 
+    } else if (percentage <= 75) {
+        return '#adff2f'; 
+    } else {
+        return '#00ff00'; 
     }
 }
 
-// Render a team's data into the matchup
+function getProgressScale(points) {
+
+    return Math.min(points * 0.05, 1); 
+}
+
 function renderTeam(teamData, teamName) {
     const teamDiv = document.createElement('div');
     teamDiv.classList.add(`team`);
@@ -149,9 +167,7 @@ function renderTeam(teamData, teamName) {
 
     const starters = teamData.starters || [];
     const starterPoints = teamData.starters_points || [];
-    console.log(starterPoints)
 
-    // Map starter IDs to player names using the `playersData` object
     const playerInfo = starters.map(starterId => {
         const player = playersData[starterId];
         if (player) {
@@ -159,53 +175,60 @@ function renderTeam(teamData, teamName) {
                 name: player.full_name,
                 team: player.team,
                 position: player.position,
-                id:player.player_id
+                id: player.player_id
             };
         }
         return null;
-    }).filter(info => info !== null);  // Filter out null entries
+    }).filter(info => info !== null);
 
     let totalPoints = 0;
+    // let testpoints = 1
 
-
-  
-    // Create a container for players
     const playersListDiv = document.createElement('div');
     playerInfo.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player');
-        playerDiv.innerHTML = `<img style="object-fit:cover;height:50px;width:50px;border-radius:50%;" src="https://sleepercdn.com/content/nfl/players/${player.id}.jpg">
+        
+    
+        const progressBar = document.createElement('div');
+        progressBar.classList.add('progress-bar');
+        const points = starterPoints[index];
+        
+     
+        progressBar.style.transform = `scaleX(${getProgressScale(points)})`;
+        progressBar.style.backgroundColor = getProgressColor(points);
+        
+        playerDiv.innerHTML = `
+            <img style="object-fit:cover;height:50px;width:50px;border-radius:50%;" src="https://sleepercdn.com/content/nfl/players/${player.id}.jpg">
             <span>${player.name} - (${player.team})</span>
             <span>${player.position}</span>
-            <span class="points">${starterPoints[index]}</span>
+            <span class="points">${points}</span>
         `;
+        
+        playerDiv.insertBefore(progressBar, playerDiv.firstChild);
         playersListDiv.appendChild(playerDiv);
-        totalPoints += starterPoints[index];  // Sum up points for total points
+        totalPoints += points;
     });
 
     teamDiv.appendChild(playersListDiv);
     document.getElementById('matchupContainer').appendChild(teamDiv);
     return totalPoints;
-
-   
-    
-    
 }
 
 
-// Show the error modal
+
 function showErrorModal() {
     const modal = document.getElementById('errorModal');
-    modal.style.display = 'block';  // Show the modal
+    modal.style.display = 'block';  
 }
 
-// Close the error modal
+
 document.getElementById('closeModal').addEventListener('click', () => {
     const modal = document.getElementById('errorModal');
-    modal.style.display = 'none';  // Hide the modal
+    modal.style.display = 'none'; 
 });
 
-// Refresh the page when the refresh button is clicked
+
 document.getElementById('refreshBtn').addEventListener('click', () => {
-    location.reload();  // Reload the page
+    location.reload(); 
 });
