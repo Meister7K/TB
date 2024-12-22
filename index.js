@@ -114,7 +114,7 @@ async function loadMatchupData() {
 
         const totalPointsDiv = document.createElement('div');
         totalPointsDiv.classList.add('total-points');
-        totalPointsDiv.textContent = `Karl : ${karlPoints} / ${mattTeamData.points}: Matt `;
+        totalPointsDiv.textContent = `Karl : ${karlPoints.toFixed(2)} / ${mattTeamData.points.toFixed(2)}: Matt `;
         matchupContainer.appendChild(totalPointsDiv);
 
     } catch (error) {
