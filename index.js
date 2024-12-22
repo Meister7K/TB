@@ -1,5 +1,20 @@
-let playersData = {};  
+let playersData = {};
+let previousPoints = {
+    karl: null,
+    matt: null
+};
 
+const leagueId = '1124846398970298368';
+const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`; 
+const season = 2024;
+const leagueURL = `https://api.sleeper.app/v1/league/${leagueId}`;
+const rostersURL = `https://api.sleeper.app/v1/league/${leagueId}/rosters`;
+const usersURL = `https://api.sleeper.app/v1/league/${leagueId}/users`;
+const diff = 9.44;
+const karl = "873581177716563968";
+const matt = "992120789191192576";
+const karlRosterId = 2;
+const mattRosterId = 4;
 
 async function loadPlayersData() {
     try {
@@ -13,6 +28,8 @@ async function loadPlayersData() {
         showErrorModal();  
     }
 }
+
+
 
 function updateCountdown() {
     const deadline = new Date('2024-12-23T23:00:00-07:00');
@@ -37,6 +54,19 @@ function updateCountdown() {
     `;
 }
 
+function checkPointsChangeAndTriggerConfetti(karlPoints, mattPoints) {
+    // Only check if we have previous points to compare against
+    if (previousPoints.karl !== null && previousPoints.matt !== null) {
+        if (karlPoints !== previousPoints.karl || mattPoints !== previousPoints.matt) {
+            triggerConfetti();
+        }
+    }
+    
+    // Update previous points
+    previousPoints.karl = karlPoints;
+    previousPoints.matt = mattPoints;
+}
+
 function triggerConfetti() {
     confetti({
         particleCount: 100,
@@ -45,102 +75,55 @@ function triggerConfetti() {
     });
 }
 
-
-const leagueId = '1124846398970298368';
-const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`; 
-
-// const leagueId= 1124846398970298368
-
-const season = 2024
-
-const leagueURL = `https://api.sleeper.app/v1/league/${leagueId}`
-
-const rostersURL = `https://api.sleeper.app/v1/league/${leagueId}/rosters`
-
-const usersURL = `https://api.sleeper.app/v1/league/${leagueId}/users`
-
-// let matchupsURL = `https://api.sleeper.app/v1/league/1124846398970298368/matchups/16`
-
-const diff = 9.44
-
-const karl = "873581177716563968" 
-const matt = "992120789191192576" 
-
-const karlRosterId = 2;
-const mattRosterId = 4;
-
-
-document.addEventListener('DOMContentLoaded', () => {
-    loadPlayersData().then(() => {
-        
-        loadMatchupData();
-        triggerConfetti();
-
-        updateCountdown();
-        setInterval(updateCountdown, 1000);
-       
-        setInterval(loadMatchupData, 30000);
-    });
-});
-
-
 async function loadMatchupData() {
     try {
-      
         const response = await fetch(matchupsURL);
         const data = await response.json();
 
-     
         const karlTeamData = data.find(item => item.roster_id === karlRosterId);
         const mattTeamData = data.find(item => item.roster_id === mattRosterId);
-console.log(karlTeamData)
-     
+        console.log(karlTeamData);
+
         if (!karlTeamData || !mattTeamData) {
             throw new Error("Failed to find both teams");
         }
 
-        
         const matchupContainer = document.getElementById('matchupContainer');
         matchupContainer.innerHTML = ''; 
 
-   
         const karlTotalPoints = renderTeam(karlTeamData, 'Karl');
         const mattTotalPoints = renderTeam(mattTeamData, 'Matt');
 
-       
+        let karlPoints = karlTeamData.points - diff;
 
-        let karlPoints = karlTeamData.points - diff
+        // Check for points change and trigger confetti if needed
+        checkPointsChangeAndTriggerConfetti(karlPoints, mattTeamData.points);
 
-        let matchDiff = karlPoints -mattTeamData.points;
+        let matchDiff = karlPoints - mattTeamData.points;
 
-        if(karlPoints > mattTeamData.points){
+        if (karlPoints > mattTeamData.points) {
             document.querySelector('.Matt-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
             document.querySelector('.Karl-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
-        }else if(karlPoints < mattTeamData.points){
-                document.querySelector('.Matt-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
-                document.querySelector('.Karl-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
-            }else{
-                document.querySelector('.Matt-color').style.cssText = ' background-color: unset;';
-                document.querySelector('.Karl-color').style.cssText = ' background-color: unset;';
-            }
-      
+        } else if (karlPoints < mattTeamData.points) {
+            document.querySelector('.Matt-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
+            document.querySelector('.Karl-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
+        } else {
+            document.querySelector('.Matt-color').style.cssText = ' background-color: unset;';
+            document.querySelector('.Karl-color').style.cssText = ' background-color: unset;';
+        }
+
         const totalPointsDiv = document.createElement('div');
         totalPointsDiv.classList.add('total-points');
         totalPointsDiv.textContent = `Karl : ${karlPoints} / ${mattTeamData.points}: Matt `;
         matchupContainer.appendChild(totalPointsDiv);
-
-        // const diffDiv = document.createElement('div');
-        // diffDiv.classList.add('diff-points');
-        // diffDiv.textContent = `Diff:${matchDiff}`;
-        // matchupContainer.appendChild(diffDiv);
 
     } catch (error) {
         console.error("Error fetching team data:", error);
         showErrorModal();  
     }
 }
+
 function getProgressColor(points) {
-   
     const percentage = points * 5; 
     
     if (percentage <= 25) {
@@ -155,7 +138,6 @@ function getProgressColor(points) {
 }
 
 function getProgressScale(points) {
-
     return Math.min(points * 0.05, 1); 
 }
 
@@ -182,19 +164,16 @@ function renderTeam(teamData, teamName) {
     }).filter(info => info !== null);
 
     let totalPoints = 0;
-    // let testpoints = 1
 
     const playersListDiv = document.createElement('div');
     playerInfo.forEach((player, index) => {
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player');
         
-    
         const progressBar = document.createElement('div');
         progressBar.classList.add('progress-bar');
         const points = starterPoints[index];
         
-     
         progressBar.style.transform = `scaleX(${getProgressScale(points)})`;
         progressBar.style.backgroundColor = getProgressColor(points);
         
@@ -215,19 +194,26 @@ function renderTeam(teamData, teamName) {
     return totalPoints;
 }
 
-
-
 function showErrorModal() {
     const modal = document.getElementById('errorModal');
     modal.style.display = 'block';  
 }
 
+document.addEventListener('DOMContentLoaded', () => {
+    loadPlayersData().then(() => {
+        loadMatchupData();
+        
+        updateCountdown();
+        setInterval(updateCountdown, 1000);
+       
+        setInterval(loadMatchupData, 10000);
+    });
+});
 
 document.getElementById('closeModal').addEventListener('click', () => {
     const modal = document.getElementById('errorModal');
     modal.style.display = 'none'; 
 });
-
 
 document.getElementById('refreshBtn').addEventListener('click', () => {
     location.reload(); 
