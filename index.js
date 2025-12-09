@@ -1,20 +1,23 @@
 let playersData = {};
 let previousPoints = {
-    karl: null,
-    matt: null
+    userOne: null,
+    userTwo: null
 };
 
-const leagueId = '1124846398970298368';
-const matchupsURL = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`; 
+const leagueId = '1257435848459173888';
+const loserBracket = `https://api.sleeper.app/v1/league/${leagueId}/losers_bracket`
+const week_15 = `https://api.sleeper.app/v1/league/${leagueId}/matchups/15`;
+const week_16 = `https://api.sleeper.app/v1/league/${leagueId}/matchups/16`; 
+
 const season = 2024;
 const leagueURL = `https://api.sleeper.app/v1/league/${leagueId}`;
 const rostersURL = `https://api.sleeper.app/v1/league/${leagueId}/rosters`;
 const usersURL = `https://api.sleeper.app/v1/league/${leagueId}/users`;
-const diff = 9.44;
-const karl = "873581177716563968";
-const matt = "992120789191192576";
-const karlRosterId = 2;
-const mattRosterId = 4;
+const diff = 0;
+const userOne = "863476197265354752";
+const userTwo = "861336657507532800";
+const userOneRosterId = 3;
+const userTwoRosterId = 4;
 
 async function loadPlayersData() {
     try {
@@ -32,7 +35,7 @@ async function loadPlayersData() {
 
 
 function updateCountdown() {
-    const deadline = new Date('2024-12-23T23:00:00-07:00');
+    const deadline = new Date('2025-12-23T06:00:00Z');
     const now = new Date();
     const difference = deadline - now;
 
@@ -54,17 +57,17 @@ function updateCountdown() {
     `;
 }
 
-function checkPointsChangeAndTriggerConfetti(karlPoints, mattPoints) {
+function checkPointsChangeAndTriggerConfetti(userOnePoints, userTwoPoints) {
     // Only check if we have previous points to compare against
-    if (previousPoints.karl !== null && previousPoints.matt !== null) {
-        if (karlPoints !== previousPoints.karl || mattPoints !== previousPoints.matt) {
+    if (previousPoints.userOne !== null && previousPoints.userTwo !== null) {
+        if (userOnePoints !== previousPoints.userOne || userTwoPoints !== previousPoints.userTwo) {
             triggerConfetti();
         }
     }
     
     // Update previous points
-    previousPoints.karl = karlPoints;
-    previousPoints.matt = mattPoints;
+    previousPoints.userOne = userOnePoints;
+    previousPoints.userTwo = userTwoPoints;
 }
 
 function triggerConfetti() {
@@ -77,44 +80,48 @@ function triggerConfetti() {
 
 async function loadMatchupData() {
     try {
-        const response = await fetch(matchupsURL);
-        const data = await response.json();
+        const [week15Response, week16Response] = await Promise.all([
+            fetch(week_15),
+            fetch(week_16)
+        ]);
+        
+        const week15Data = await week15Response.json();
+        const week16Data = await week16Response.json();
 
-        const karlTeamData = data.find(item => item.roster_id === karlRosterId);
-        const mattTeamData = data.find(item => item.roster_id === mattRosterId);
-        console.log(karlTeamData);
+        const userOneWeek15 = week15Data.find(item => item.roster_id === userOneRosterId);
+        const userTwoWeek15 = week15Data.find(item => item.roster_id === userTwoRosterId);
+        const userOneWeek16 = week16Data.find(item => item.roster_id === userOneRosterId);
+        const userTwoWeek16 = week16Data.find(item => item.roster_id === userTwoRosterId);
 
-        if (!karlTeamData || !mattTeamData) {
-            throw new Error("Failed to find both teams");
+        if (!userOneWeek15 || !userTwoWeek15 || !userOneWeek16 || !userTwoWeek16) {
+            throw new Error("Failed to find both teams for both weeks");
         }
 
         const matchupContainer = document.getElementById('matchupContainer');
         matchupContainer.innerHTML = ''; 
 
-        const karlTotalPoints = renderTeam(karlTeamData, 'Karl');
-        const mattTotalPoints = renderTeam(mattTeamData, 'Matt');
+        renderTeam(userOneWeek15, userOneWeek16, 'Evan_Hink');
+        renderTeam(userTwoWeek15, userTwoWeek16, 'Matt_Springer');
 
-        let karlPoints = karlTeamData.points - diff;
+        let userOnePoints = (userOneWeek15.points + userOneWeek16.points) - diff;
+        let userTwoPoints = userTwoWeek15.points + userTwoWeek16.points;
 
-        // Check for points change and trigger confetti if needed
-        checkPointsChangeAndTriggerConfetti(karlPoints, mattTeamData.points);
+        checkPointsChangeAndTriggerConfetti(userOnePoints, userTwoPoints);
 
-        let matchDiff = karlPoints - mattTeamData.points;
-
-        if (karlPoints > mattTeamData.points) {
-            document.querySelector('.Matt-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
-            document.querySelector('.Karl-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
-        } else if (karlPoints < mattTeamData.points) {
-            document.querySelector('.Matt-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
-            document.querySelector('.Karl-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
+        if (userOnePoints > userTwoPoints) {
+            document.querySelector('.userTwo-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
+            document.querySelector('.userOne-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
+        } else if (userOnePoints < userTwoPoints) {
+            document.querySelector('.userTwo-color').style.cssText = ' background-color: rgba(0, 255, 190, .3);';
+            document.querySelector('.userOne-color').style.cssText = ' background-color: rgba(255, 0, 10, .3);';
         } else {
-            document.querySelector('.Matt-color').style.cssText = ' background-color: unset;';
-            document.querySelector('.Karl-color').style.cssText = ' background-color: unset;';
+            document.querySelector('.userTwo-color').style.cssText = ' background-color: unset;';
+            document.querySelector('.userOne-color').style.cssText = ' background-color: unset;';
         }
 
         const totalPointsDiv = document.createElement('div');
         totalPointsDiv.classList.add('total-points');
-        totalPointsDiv.textContent = `Karl : ${karlPoints.toFixed(2)} / ${mattTeamData.points.toFixed(2)}: Matt `;
+        totalPointsDiv.textContent = `userOne : ${userOnePoints.toFixed(2)} / ${userTwoPoints.toFixed(2)}: userTwo `;
         matchupContainer.appendChild(totalPointsDiv);
 
     } catch (error) {
@@ -141,57 +148,57 @@ function getProgressScale(points) {
     return Math.min(points * 0.05, 1); 
 }
 
-function renderTeam(teamData, teamName) {
-    const teamDiv = document.createElement('div');
-    teamDiv.classList.add(`team`);
-    teamDiv.classList.add(`${teamName}-color`);
-    teamDiv.innerHTML = `<h2>${teamName}</h2>`;
-
-    const starters = teamData.starters || [];
-    const starterPoints = teamData.starters_points || [];
-
-    const playerInfo = starters.map(starterId => {
-        const player = playersData[starterId];
-        if (player) {
-            return {
-                name: player.full_name,
-                team: player.team,
-                position: player.position,
-                id: player.player_id
-            };
-        }
-        return null;
-    }).filter(info => info !== null);
-
-    let totalPoints = 0;
-
+function renderWeekPlayers(weekData, weekNumber) {
+    const starters = weekData.starters || [];
+    const starterPoints = weekData.starters_points || [];
+    
+    const weekDiv = document.createElement('div');
+    weekDiv.innerHTML = `<h3>Week ${weekNumber} (${weekData.points.toFixed(2)})</h3>`;
+    
     const playersListDiv = document.createElement('div');
-    playerInfo.forEach((player, index) => {
+    starters.forEach((playerId, index) => {
+        const player = playersData[playerId];
+        if (!player) return;
+        
+        const points = starterPoints[index] || 0;
         const playerDiv = document.createElement('div');
         playerDiv.classList.add('player');
         
         const progressBar = document.createElement('div');
         progressBar.classList.add('progress-bar');
-        const points = starterPoints[index];
-        
         progressBar.style.transform = `scaleX(${getProgressScale(points)})`;
         progressBar.style.backgroundColor = getProgressColor(points);
         
         playerDiv.innerHTML = `
-            <img style="object-fit:cover;height:50px;width:50px;border-radius:50%;" src="https://sleepercdn.com/content/nfl/players/${player.id}.jpg">
-            <span>${player.name} - (${player.team})</span>
+            <img style="object-fit:cover;height:50px;width:50px;border-radius:50%;" src="https://sleepercdn.com/content/nfl/players/${player.player_id}.jpg">
+            <span>${player.full_name} - (${player.team})</span>
             <span>${player.position}</span>
-            <span class="points">${points}</span>
+            <span class="points">${points.toFixed(2)}</span>
         `;
         
         playerDiv.insertBefore(progressBar, playerDiv.firstChild);
         playersListDiv.appendChild(playerDiv);
-        totalPoints += points;
     });
+    
+    weekDiv.appendChild(playersListDiv);
+    return weekDiv;
+}
 
-    teamDiv.appendChild(playersListDiv);
+function renderTeam(week15Data, week16Data, teamName) {
+    const teamDiv = document.createElement('div');
+    teamDiv.classList.add(`team`);
+    teamDiv.classList.add(`${teamName}-color`);
+    
+    const week15Points = week15Data.points || 0;
+    const week16Points = week16Data.points || 0;
+    const totalTeamPoints = week15Points + week16Points;
+    
+    teamDiv.innerHTML = `<h2>${teamName} - Total: ${totalTeamPoints.toFixed(2)}</h2>`;
+    
+    teamDiv.appendChild(renderWeekPlayers(week15Data, 15));
+    teamDiv.appendChild(renderWeekPlayers(week16Data, 16));
+    
     document.getElementById('matchupContainer').appendChild(teamDiv);
-    return totalPoints;
 }
 
 function showErrorModal() {
